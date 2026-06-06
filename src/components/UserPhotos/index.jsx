@@ -1,23 +1,63 @@
-import React from "react";
-import { Typography } from "@mui/material";
+import React, { useState, useEffect } from "react";
+import { Typography, Button, Box } from "@mui/material";
 
 import "./styles.css";
-import {useParams} from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 
-/**
- * Define UserPhotos, a React component of Project 4.
- */
-function UserPhotos () {
-    const user = useParams();
-    return (
-      <Typography variant="body1">
-        This should be the UserPhotos view of the PhotoShare app. Since it is
-        invoked from React Router the params from the route will be in property
-        match. So this should show details of user:
-        {user.userId}. You can fetch the model for the user
-        from models.photoOfUserModel(userId):
-      </Typography>
-    );
+function formatDate(date) {
+  return new Date(date).toLocaleString("vi-VN");
+}
+
+function UserPhotos({ setTitle }) {
+  const { userId } = useParams();
+  const navigate = useNavigate();
+  const [photos, setPhotos] = useState([]);
+  useEffect(() => {
+    fetch(`https://n2rh2r-8081.csb.app/api/user/${userId}`,{
+      credentials:"include",
+    })
+      .then((res) => res.json())
+      .then((data) =>
+        setTitle(`Photo Of ${data.first_name} ${data.last_name}`)
+      );
+    fetch(`https://n2rh2r-8081.csb.app/api/photo/photosOfUser/${userId}`,{
+      credentials:"include",
+    })
+      .then((res) => res.json())
+      .then((data) => setPhotos(data));
+  }, [userId]);
+  return (
+    <>
+      {photos.length === 0 && <p>Loading...</p>}
+      {photos.map((photo) => (
+        <Box>
+          <img
+            src={
+              photo.file_name.startsWith("http")
+                ? photo.file_name
+                : `/images/${photo.file_name}`
+            }
+            alt="photo"
+          />
+          <Typography>{formatDate(photo.date_time)}</Typography>
+          <Typography variant="h5">Comments</Typography>
+          {photo.comments.map((c) => (
+            <Box>
+              <Typography
+                variant="h8"
+                sx={{ cursor: "pointer" }}
+                onClick={() => navigate(`/users/${c.user._id}`)}
+              >
+                {c.user?.first_name} {c.user?.last_name}
+              </Typography>
+              <Typography>{formatDate(c.date_time)}</Typography>
+              <Typography>{c.comment}</Typography>
+            </Box>
+          ))}
+        </Box>
+      ))}
+    </>
+  );
 }
 
 export default UserPhotos;

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   Divider,
   List,
@@ -9,24 +9,26 @@ import {
 import { Link } from "react-router-dom";
 
 import "./styles.css";
-import models from "../../modelData/models";
 
 function UserList() {
-  const users = models.userListModel();
+  const [users, setUsers] = useState([]);
+  useEffect(() => {
+    fetch(`https://n2rh2r-8081.csb.app/api/user/list`,{
+      credentials:"include"
+    })
+      .then((res) => res.json())
+      .then((data) => setUsers(data));
+  }, []);
 
   return (
     <div>
-      <Typography variant="body1">
-        User List
-      </Typography>
+      <Typography variant="body1">User List</Typography>
 
       <List component="nav">
         {users.map((item) => (
           <React.Fragment key={item._id}>
             <ListItem button component={Link} to={`/users/${item._id}`}>
-              <ListItemText
-                primary={`${item.first_name} ${item.last_name}`}
-              />
+              <ListItemText primary={`${item.first_name} ${item.last_name}`} />
             </ListItem>
             <Divider />
           </React.Fragment>
